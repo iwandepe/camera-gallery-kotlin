@@ -28,8 +28,20 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/appBarLayout"
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
         tools:layout_editor_absoluteX="0dp" />
+
+    <com.ppb.gallery.helper.SquareLayout
+        android:layout_below="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/ivTest"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </com.ppb.gallery.helper.SquareLayout>
+
 </RelativeLayout>

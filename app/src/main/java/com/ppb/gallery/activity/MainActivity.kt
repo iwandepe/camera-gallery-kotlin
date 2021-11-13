@@ -1,10 +1,18 @@
 package com.ppb.gallery.activity
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ppb.gallery.R
@@ -17,6 +25,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     // gallery column count
     private val SPAN_COUNT = 3
+    private val CAMERA_REQUEST = 1888
     private val imageList = ArrayList<Image>()
     lateinit var galleryAdapter: GalleryImageAdapter
 
@@ -34,6 +43,10 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         // load images
         loadImages()
 
+        if (ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_DENIED)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST)
+
         setSupportActionBar(toolbar)
     }
 
@@ -47,7 +60,11 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         return when (item.itemId) {
             R.id.action_add -> {
                 Toast.makeText(applicationContext, "click on add image", Toast.LENGTH_LONG).show()
-                true
+
+                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                startActivityForResult(cameraIntent, CAMERA_REQUEST)
+
+                return true
             }
             R.id.action_exit ->{
                 Toast.makeText(applicationContext, "click on exit", Toast.LENGTH_LONG).show()
@@ -72,6 +89,21 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         imageList.add(Image("https://i.ibb.co/JvWpzYC/sunset.jpg", "Sunset in Beach"))
         galleryAdapter.notifyDataSetChanged()
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CAMERA_REQUEST) {
+            val photo: Bitmap = data?.extras?.get("data") as Bitmap
+            val ivTest = findViewById(R.id.ivTest) as ImageView
+            ivTest.setImageBitmap(photo)
+
+            // TODO: Captured image quality is very low
+            // TODO: Capture image still use extra
+            // TODO: POST image captured to server
+            // TODO: Get url of newly posted image and update gallery
+        }
+    }
+
     override fun onClick(position: Int) {
         val bundle = Bundle()
         bundle.putSerializable("images", imageList)
