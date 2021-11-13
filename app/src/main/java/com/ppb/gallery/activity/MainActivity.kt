@@ -2,6 +2,9 @@ package com.ppb.gallery.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ppb.gallery.R
@@ -9,6 +12,7 @@ import com.ppb.gallery.adapter.GalleryImageAdapter
 import com.ppb.gallery.adapter.GalleryImageClickListener
 import com.ppb.gallery.adapter.Image
 import com.ppb.gallery.fragment.GalleryFullscreenFragment
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     // gallery column count
@@ -29,7 +33,30 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         recyclerView.adapter = galleryAdapter
         // load images
         loadImages()
+
+        setSupportActionBar(toolbar)
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_add -> {
+                Toast.makeText(applicationContext, "click on add image", Toast.LENGTH_LONG).show()
+                true
+            }
+            R.id.action_exit ->{
+                Toast.makeText(applicationContext, "click on exit", Toast.LENGTH_LONG).show()
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun loadImages() {
         imageList.add(Image("https://i.ibb.co/wBYDxLq/beach.jpg", "Beach Houses"))
         imageList.add(Image("https://i.ibb.co/gM5NNJX/butterfly.jpg", "Butterfly"))
