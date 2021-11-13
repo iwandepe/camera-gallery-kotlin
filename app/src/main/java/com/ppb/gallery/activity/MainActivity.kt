@@ -8,6 +8,7 @@ import com.ppb.gallery.R
 import com.ppb.gallery.adapter.GalleryImageAdapter
 import com.ppb.gallery.adapter.GalleryImageClickListener
 import com.ppb.gallery.adapter.Image
+import com.ppb.gallery.fragment.GalleryFullscreenFragment
 
 class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     // gallery column count
@@ -45,6 +46,12 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         galleryAdapter.notifyDataSetChanged()
     }
     override fun onClick(position: Int) {
-        // handle click of image
+        val bundle = Bundle()
+        bundle.putSerializable("images", imageList)
+        bundle.putInt("position", position)
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val galleryFragment = GalleryFullscreenFragment()
+        galleryFragment.setArguments(bundle)
+        galleryFragment.show(fragmentTransaction, "gallery")
     }
 }
