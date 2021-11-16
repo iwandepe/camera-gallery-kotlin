@@ -1,6 +1,7 @@
 package com.ppb.gallery.activity
 
 import android.Manifest
+import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -25,15 +26,19 @@ import com.ppb.gallery.adapter.GalleryImageClickListener
 import com.ppb.gallery.adapter.Image
 import com.ppb.gallery.fragment.GalleryFullscreenFragment
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.View
 import android.webkit.MimeTypeMap
 import android.widget.ImageButton
+import com.ppb.gallery.network.ApiConfig
+import com.ppb.gallery.network.Default
+import okhttp3.*
+import retrofit2.Response
+import java.io.*
 
 
 class MainActivity : AppCompatActivity(), GalleryImageClickListener {
@@ -46,6 +51,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     val REQUEST_IMAGE_CAPTURE = 1
     lateinit var ivTest : ImageView
     lateinit var btnUpload : ImageButton
+    lateinit var imagename:MultipartBody.Part
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,8 +131,8 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
 
             setPic()
 
-            // TODO: Captured image quality is very low
-            // TODO: Capture image still use extra
+            // TODO: Captured image quality is very low                     (v)
+            // TODO: Capture image still use extra                          (?)
             // TODO: POST image captured to server
             // TODO: Get url of newly posted image and update gallery
         }
@@ -216,13 +222,66 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     }
 
     private fun uploadImage(){
-        Toast.makeText(applicationContext, "Upload image", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(applicationContext, "Upload image", Toast.LENGTH_SHORT).show()
 
+//        val requestBody = RequestBody.create(MediaType.parse("multipart"), File(currentPhotoPath))
+//        imagename = MultipartBody.Part.createFormData("imageName", File(currentPhotoPath)?.name, requestBody)
+//        val call = ApiConfig().instance().upload(imagename)
+        val base64 : String = "data:image/jpeg;base64," + imageToBase64(currentPhotoPath)
+
+        val call = ApiConfig().instance().uploadBase64(
+            base64
+        )
+
+        call.enqueue(object : retrofit2.Callback<Default>{
+
+            override fun onFailure(call: retrofit2.Call<Default>?, t: Throwable?) {
+                Toast.makeText(applicationContext,"Connection error",Toast.LENGTH_SHORT).show()
+                Log.d("UploadFailure", t.toString())
+            }
+
+            override fun onResponse(call: retrofit2.Call<Default>?, response: Response<Default>?) {
+                Toast.makeText(applicationContext, "Upload Success to " + response?.body()?.url, Toast.LENGTH_LONG).show()
+
+                response?.body()?.toString()?.let { Log.i("RESPONSE", it) }
+
+//                if(response?.body()?.message?.contains("Success",true)!!){
+//                    this@UploadActivity.finish()
+//                }
+
+            }
+
+        })
+
+    }
+
+    fun imageToBase64(fileName: String) : String{
+        val inputStream: InputStream = FileInputStream(fileName)
+
+        val bytes: ByteArray
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        val output = ByteArrayOutputStream()
+
+        try {
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                output.write(buffer, 0, bytesRead)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        bytes = output.toByteArray()
+
+        return android.util.Base64.encodeToString(bytes, Base64.DEFAULT)
 
 
     }
+
+}
+
+//    ==== SOURCES !!!
 //    https://stackoverflow.com/questions/20322528/uploading-images-to-server-android
 //    https://handyopinion.com/upload-file-to-server-in-android-kotlin/
 //    https://www.youtube.com/watch?v=dbSAIuyHInY
-
-}
+//    https://erthru.medium.com/upload-gambar-menggunakan-retrofit-2-76fc74a232a9
