@@ -30,13 +30,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.util.Base64
 import android.view.View
 import android.webkit.MimeTypeMap
+import android.widget.Button
 import android.widget.ImageButton
 import com.ppb.gallery.network.ApiConfig
 import com.ppb.gallery.network.Default
+import com.ppb.gallery.network.HttpHandler
 import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Response
 import java.io.*
 
@@ -50,17 +56,21 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     private lateinit var currentPhotoPath: String
     val REQUEST_IMAGE_CAPTURE = 1
     lateinit var ivTest : ImageView
-    lateinit var btnUpload : ImageButton
+    lateinit var btnUpload : Button
     lateinit var imagename:MultipartBody.Part
+    private val imgList = ArrayList<String>()
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         ivTest = findViewById(R.id.ivTest) as ImageView
-        btnUpload = findViewById(R.id.btnUpload) as ImageButton
+        btnUpload = findViewById(R.id.btnUpload) as Button
         btnUpload.setOnClickListener {
             uploadImage()
         }
+        btnUpload.isEnabled = false
 
         // init adapter
         galleryAdapter = GalleryImageAdapter(imageList)
@@ -107,20 +117,8 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     }
 
     private fun loadImages() {
-        imageList.add(Image("https://i.ibb.co/wBYDxLq/beach.jpg", "Beach Houses"))
-        imageList.add(Image("https://i.ibb.co/gM5NNJX/butterfly.jpg", "Butterfly"))
-        imageList.add(Image("https://i.ibb.co/10fFGkZ/car-race.jpg", "Car Racing"))
-        imageList.add(Image("https://i.ibb.co/ygqHsHV/coffee-milk.jpg", "Coffee with Milk"))
-        imageList.add(Image("https://i.ibb.co/7XqwsLw/fox.jpg", "Fox"))
-        imageList.add(Image("https://i.ibb.co/L1m1NxP/girl.jpg", "Mountain Girl"))
-        imageList.add(Image("https://i.ibb.co/wc9rSgw/desserts.jpg", "Desserts Table"))
-        imageList.add(Image("https://i.ibb.co/wdrdpKC/kitten.jpg", "Kitten"))
-        imageList.add(Image("https://i.ibb.co/dBCHzXQ/paris.jpg", "Paris Eiffel"))
-        imageList.add(Image("https://i.ibb.co/JKB0KPk/pizza.jpg", "Pizza Time"))
-        imageList.add(Image("https://i.ibb.co/VYYPZGk/salmon.jpg", "Salmon "))
-//        imageList.add(Image("https://i.ibb.co/JvWpzYC/sunset.jpg", "Sunset in Beach"))
-        imageList.add(Image("http://i.picsum.photos/id/54/1600/1000.jpg?hmac=VEsMDh66FUrSTzsWaVs6UJsWtGspZcZi5pu2k1sqBZ4", "Iris ITS"))
-        galleryAdapter.notifyDataSetChanged()
+        imageList.clear()
+        fetchData()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -130,11 +128,12 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
 //            ivTest.setImageBitmap(photo)
 
             setPic()
+            btnUpload.isEnabled = true
 
             // TODO: Captured image quality is very low                     (v)
             // TODO: Capture image still use extra                          (?)
-            // TODO: POST image captured to server
-            // TODO: Get url of newly posted image and update gallery
+            // TODO: POST image captured to server                          (v)
+            // TODO: Get url of newly posted image and update gallery       (~)
         }
     }
 
@@ -243,7 +242,15 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
             override fun onResponse(call: retrofit2.Call<Default>?, response: Response<Default>?) {
                 Toast.makeText(applicationContext, "Upload Success to " + response?.body()?.url, Toast.LENGTH_LONG).show()
 
-                response?.body()?.toString()?.let { Log.i("RESPONSE", it) }
+                if(response?.isSuccessful == true){
+                    imageList.clear()
+                    fetchData()
+
+                    ivTest.setImageDrawable(getDrawable(R.drawable.ic_launcher_background))
+                    btnUpload.isEnabled = false
+                }
+
+                response?.body()?.toString()?.let { Log.i("ResponseBody", it) }
 
 //                if(response?.body()?.message?.contains("Success",true)!!){
 //                    this@UploadActivity.finish()
@@ -276,6 +283,54 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         return android.util.Base64.encodeToString(bytes, Base64.DEFAULT)
 
 
+    }
+
+    fun fetchData() {
+        GetData().execute()
+    }
+
+    inner class GetData : AsyncTask<Void?, Void?, Void?>() {
+        override fun onPreExecute() {
+            super.onPreExecute()
+
+            Log.i("Main", "onPreExecute")
+        }
+
+        override fun onPostExecute(result: Void?) {
+            super.onPostExecute(result)
+
+            Log.i("Main", "onPostExecute")
+            galleryAdapter.notifyDataSetChanged()
+
+        }
+
+        protected override fun doInBackground(vararg p0: Void?): Void? {
+            val httpHandler = HttpHandler()
+            val url = "https://gallery.ppb.iwanprakoso.com/images"
+            val jsonStr: String? = httpHandler.makeServiceCall(url)
+            var imgUrl : String
+
+            if (jsonStr != null) {
+                try {
+                    val response = JSONObject(jsonStr)
+                    val status = response.getBoolean("success") as Boolean
+                    val imgArray = response.getJSONArray("urls")
+                    for (i in 0 until imgArray.length()) {
+                        imgArray.getString(i).also { imgUrl = it }
+                        imgUrl = "https://$imgUrl"
+                        Log.i("IMGURL", imgUrl + " == " + i.toString())
+
+                        imageList.add(Image(imgUrl, "Image $i"))
+                    }
+                } catch (e: JSONException) {
+                    Log.e("Main", "JSON Parsing Error: " + e.message)
+                }
+            } else {
+                Log.e("Main", "Couldn't get json from server.")
+            }
+
+            return null
+        }
     }
 
 }
