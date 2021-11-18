@@ -101,9 +101,6 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
             R.id.action_add -> {
                 Toast.makeText(applicationContext, "click on add image", Toast.LENGTH_LONG).show()
 
-//                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-//                startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE)
-
                 dispatchTakePictureIntent()
 
                 return true
@@ -124,16 +121,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
-//            val photo: Bitmap = data?.extras?.get("data") as Bitmap
-//            ivTest.setImageBitmap(photo)
-
             setPic()
-            btnUpload.isEnabled = true
-
-            // TODO: Captured image quality is very low                     (v)
-            // TODO: Capture image still use extra                          (?)
-            // TODO: POST image captured to server                          (v)
-            // TODO: Get url of newly posted image and update gallery       (~)
         }
     }
 
@@ -218,19 +206,12 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         bmOptions.inPurgeable = true
         val bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions)
         ivTest.setImageBitmap(bitmap)
+        btnUpload.isEnabled = true
     }
 
     private fun uploadImage(){
-//        Toast.makeText(applicationContext, "Upload image", Toast.LENGTH_SHORT).show()
-
-//        val requestBody = RequestBody.create(MediaType.parse("multipart"), File(currentPhotoPath))
-//        imagename = MultipartBody.Part.createFormData("imageName", File(currentPhotoPath)?.name, requestBody)
-//        val call = ApiConfig().instance().upload(imagename)
         val base64 : String = "data:image/jpeg;base64," + imageToBase64(currentPhotoPath)
-
-        val call = ApiConfig().instance().uploadBase64(
-            base64
-        )
+        val call = ApiConfig().instance().uploadBase64( base64 )
 
         call.enqueue(object : retrofit2.Callback<Default>{
 
@@ -249,17 +230,8 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
                     ivTest.setImageDrawable(getDrawable(R.drawable.ic_launcher_background))
                     btnUpload.isEnabled = false
                 }
-
-                response?.body()?.toString()?.let { Log.i("ResponseBody", it) }
-
-//                if(response?.body()?.message?.contains("Success",true)!!){
-//                    this@UploadActivity.finish()
-//                }
-
             }
-
         })
-
     }
 
     fun imageToBase64(fileName: String) : String{
@@ -281,7 +253,6 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         bytes = output.toByteArray()
 
         return android.util.Base64.encodeToString(bytes, Base64.DEFAULT)
-
 
     }
 
