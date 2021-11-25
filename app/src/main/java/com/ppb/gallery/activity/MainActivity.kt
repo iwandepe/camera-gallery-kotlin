@@ -45,6 +45,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.Response
 import java.io.*
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity(), GalleryImageClickListener {
@@ -116,6 +117,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     private fun loadImages() {
         imageList.clear()
         fetchData()
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -209,8 +211,29 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         btnUpload.isEnabled = true
     }
 
+    fun resizeImage(path: String) : String {
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+        val b = BitmapFactory.decodeFile(path)
+        val out = Bitmap.createScaledBitmap(b, 320, 480, false)
+
+        val file = File(dir, "resize.png")
+        val fOut: FileOutputStream
+        try {
+            fOut = FileOutputStream(file)
+            out.compress(Bitmap.CompressFormat.PNG, 100, fOut)
+            fOut.flush()
+            fOut.close()
+            b.recycle()
+            out.recycle()
+        } catch (e: Exception) {
+        }
+
+        return file.absolutePath
+    }
+
     private fun uploadImage(){
-        val base64 : String = "data:image/jpeg;base64," + imageToBase64(currentPhotoPath)
+
+        val base64 : String = "data:image/jpeg;base64," + imageToBase64(resizeImage(currentPhotoPath))
         val call = ApiConfig().instance().uploadBase64( base64 )
 
         call.enqueue(object : retrofit2.Callback<Default>{

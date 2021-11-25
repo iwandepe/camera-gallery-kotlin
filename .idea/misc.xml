@@ -4,6 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/layout/fragment_gallery_fullscreen.xml" value="0.19230769230769232" />
+        <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/layout/image_fullscreen.xml" value="0.19230769230769232" />
+        <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/layout/item_gallery_image.xml" value="0.16623931623931623" />
+        <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/menu/menu_main.xml" value="0.16623931623931623" />
         <entry key="..\:/Coll/5_7-PPB-A/camera-gallery-kotlin/app/src/main/res/xml/file_paths.xml" value="0.3625" />
       </map>
     </option>
