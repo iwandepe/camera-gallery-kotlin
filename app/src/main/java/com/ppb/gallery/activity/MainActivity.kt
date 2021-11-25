@@ -13,8 +13,6 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -34,8 +32,7 @@ import android.os.AsyncTask
 import android.util.Base64
 import android.view.View
 import android.webkit.MimeTypeMap
-import android.widget.Button
-import android.widget.ImageButton
+import android.widget.*
 import com.ppb.gallery.network.ApiConfig
 import com.ppb.gallery.network.Default
 import com.ppb.gallery.network.HttpHandler
@@ -58,6 +55,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     val REQUEST_IMAGE_CAPTURE = 1
     lateinit var ivTest : ImageView
     lateinit var btnUpload : Button
+    lateinit var loadingBar : ProgressBar
     lateinit var imagename:MultipartBody.Part
     private val imgList = ArrayList<String>()
 
@@ -72,6 +70,9 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
             uploadImage()
         }
         btnUpload.isEnabled = false
+
+        loadingBar = findViewById(R.id.loadingBar)
+        loadingBar.visibility = View.GONE
 
         // init adapter
         galleryAdapter = GalleryImageAdapter(imageList)
@@ -208,6 +209,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
         bmOptions.inPurgeable = true
         val bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions)
         ivTest.setImageBitmap(bitmap)
+        ivTest.rotation = 90F
         btnUpload.isEnabled = true
     }
 
@@ -232,8 +234,9 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
     }
 
     private fun uploadImage(){
+        loadingBar.visibility = View.VISIBLE
 
-        val base64 : String = "data:image/jpeg;base64," + imageToBase64(resizeImage(currentPhotoPath))
+        val base64 : String = "data:image/jpeg;base64," + imageToBase64(currentPhotoPath)
         val call = ApiConfig().instance().uploadBase64( base64 )
 
         call.enqueue(object : retrofit2.Callback<Default>{
@@ -244,6 +247,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
             }
 
             override fun onResponse(call: retrofit2.Call<Default>?, response: Response<Default>?) {
+                loadingBar.visibility = View.GONE
                 Toast.makeText(applicationContext, "Upload Success to " + response?.body()?.url, Toast.LENGTH_LONG).show()
 
                 if(response?.isSuccessful == true){
@@ -288,6 +292,8 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
             super.onPreExecute()
 
             Log.i("Main", "onPreExecute")
+            loadingBar.visibility = View.VISIBLE
+
         }
 
         override fun onPostExecute(result: Void?) {
@@ -295,6 +301,7 @@ class MainActivity : AppCompatActivity(), GalleryImageClickListener {
 
             Log.i("Main", "onPostExecute")
             galleryAdapter.notifyDataSetChanged()
+            loadingBar.visibility = View.GONE
 
         }
 
